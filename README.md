@@ -1,2 +1,3 @@
 # steam-market-logger
-python
+
+	python3
