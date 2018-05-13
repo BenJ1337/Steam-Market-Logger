@@ -153,8 +153,10 @@ if __name__ == "__main__":
 
 	programm_folder 	 				= os.path.abspath(".")
 	resource_folder_name 				= "Resources"
-	game_name 	 						= "PLAYERUNKNOWN'S BATTLEGROUNDS"
-	game_id 	 						= "578080"
+	#game_name 	 						= "PLAYERUNKNOWN'S BATTLEGROUNDS"
+	#game_id 	 						= "578080"
+	game_name 	 						= "CSGO"
+	game_id 	 						= "730"
 	number_of_items_in_one_json 		= 100
 	start_item 							= 0
 	
