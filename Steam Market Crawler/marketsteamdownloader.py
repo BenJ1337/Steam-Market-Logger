@@ -1,4 +1,5 @@
-import os, json, urllib.request, time, random, datetime, re, traceback
+import os, json, urllib.request, time, random, datetime, traceback
+
 
 def createResourceFolder( data_folder ):
 	if not os.path.exists(data_folder):
@@ -35,22 +36,13 @@ def downloadMarketResources( raw_data_folder, folder_id, game_id, number_of_item
 
 	content_of_gamefolder = os.path.join(raw_data_folder, str( folder_id ))
 
-	down_link = 'https://steamcommunity.com/market/search/render/?query=&start=' + str( start_item ) + '&count=' + str( number_of_items_in_one_json ) + '&search_descriptions=0&sort_column=price&sort_dir=asc&appid=' + str( game_id )
-
-	try:	
-		response 				= urllib.request.urlopen( down_link )
-		data 					= json.load(response)  		
-	except Exception:
-		print("site not available")
-
 	number_of_sites = data["total_count"]
 	print( "Items in market: " + str( number_of_sites ) )
 
 	index = 0
 	for i in range(0, number_of_sites, 100 ):
-		print(str(i))
+		down_link = 'https://steamcommunity.com/market/search/render/?query=&norender=1&start=' + str( i ) + '&count=' + str( number_of_items_in_one_json ) + '&search_descriptions=0&sort_column=price&sort_dir=asc&appid=' + str( game_id )
 
-		down_link = 'https://steamcommunity.com/market/search/render/?query=&start=' + str( i ) + '&count=' + str( number_of_items_in_one_json ) + '&search_descriptions=0&sort_column=price&sort_dir=asc&appid=' + str( game_id )
 		try:	
 			response 				= urllib.request.urlopen( down_link )
 			data 					= json.load(response)  	
@@ -65,54 +57,25 @@ def downloadMarketResources( raw_data_folder, folder_id, game_id, number_of_item
 			traceback.print_exc()
 
 		index += 1
-		time.sleep( random.randint(15,25) )
+		time.sleep( random.randint(10, 15)  )
 
 	endzeitpunkt = time.localtime()
 	diffenenz = time.mktime( endzeitpunkt ) - time.mktime( startzeitpunkt )
 	print( "endtime: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n" + "Dauer: " + str( diffenenz/60 ) + " min" )
+	
 
 def createList( game_data_folder, raw_game_data_folder, game_id, id ):
 		listfile_folder = os.path.join( raw_game_data_folder, str( id ) )
 
-
-		def stellen(wert):
-			if (wert > 0):
-				return 1+stellen(wert/10)
-			else:
-				return 0
-
-		def sucheMatchingString(suchString, quellString):
-			suchStringREG = re.compile(suchString)
-			return ( ( re.findall( suchStringREG, quellString ) ) )
-
-		def korrigiereNamen(quellStringArray):
-			try: 
-				for i in range(len(quellStringArray)):
-					quellStringArray[i] = re.sub(r'%2A', '*', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%20', ' ', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%21', '!', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%26', '&', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%27', "'", quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%28', '(', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%29', ')', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%2C', ',', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%3A', ':', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%40', '@', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%7C', '|', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%E2%84%A2', '(TM)', quellStringArray[i])
-					quellStringArray[i] = re.sub(r'%E2%98%85', '*', quellStringArray[i])
-			except Exception:
-				print("index out of range: ersetzen")
-
-			return quellStringArray
-
-		zusammenfassung_folder = os.path.join( game_data_folder, game_name + str(id) + ".txt")
+		zusammenfassung_folder = os.path.join( game_data_folder, game_name + str(id) + ".csv")
 		datei_out = open(zusammenfassung_folder , "w")
 		datei_out.close()
 
 		datei_out = open(zusammenfassung_folder , "a")
 
 		items = os.listdir( listfile_folder )
+
+		datei_out.write( "Name,price,number\n" )
 		for item in items:
 			items_data = os.path.join(listfile_folder, item)
 
@@ -120,34 +83,39 @@ def createList( game_data_folder, raw_game_data_folder, game_id, id ):
 			data 		= datei_in.read()
 			data 		= json.loads(data)
 
-			item_namen = sucheMatchingString('<a class=\\"market_listing_row_link\\" href=\\"https://steamcommunity.com/market/listings/' + str(game_id) + '/(.*)\\" id=\\"resultlink_', data["results_html"])			
-			item_anzahl = sucheMatchingString('<span class=\\"market_listing_num_listings_qty\\" data-qty=\\"(.*)\\">', data['results_html'])
-			item_preis = sucheMatchingString('" data-currency=\\"1\\">(.*)</span>', data['results_html'])
-
-			item_namen = korrigiereNamen( item_namen )
-		
-			abstandNachName = 75
-			abstandNachPreis = 20
-
-			for i in range( 0, len(item_namen) ):
-				ausgabe = 'Name: '
-				ausgabe += item_namen[i]
-				index = len( item_namen[i] )
-				while( index < abstandNachName ):
-					ausgabe += ' '
-					index += 1
-				ausgabe += item_preis[i]
-				index = len( item_preis[i] )
-				while( index < abstandNachPreis ):
-					ausgabe += ' '
-					index += 1
-				ausgabe += "#" + item_anzahl[i]
-				print( ausgabe )
-				datei_out.write( ausgabe + "\n")
-
+			ausgabe = outputCSV( data['results'] )
+			print( ausgabe )
+			datei_out.write( ausgabe )
 
 		datei_out.close()
 
+def outputCSV( items ):
+	ausgabe = ""
+	for entry in items:
+		ausgabe += entry['name'] + "," + entry['sell_price_text'] + "," + str(entry['sell_listings']) + "\n"
+
+	return ausgabe
+
+def outputFile( items ):		
+	abstandNachName = 75
+	abstandNachPreis = 20
+
+	ausgabe = ''
+	for entry in items:
+		ausgabe += 'Name: '
+		ausgabe += entry['name']
+		index = len( entry['name'] )
+		while( index < abstandNachName ):
+			ausgabe += ' '
+			index += 1
+		ausgabe += entry['sell_price_text']
+		index = len( entry['sell_price_text'] )
+		while( index < abstandNachPreis ):
+			ausgabe += ' '
+			index += 1
+		ausgabe += "#" + str(entry['sell_listings']) + "\n"
+	
+	return ausgabe
 
 if __name__ == "__main__":
 
@@ -160,8 +128,8 @@ if __name__ == "__main__":
 	number_of_items_in_one_json 		= 100
 	start_item 							= 0
 	
-	data_folder 		= os.path.join(programm_folder, resource_folder_name)
-	game_data_folder 	= os.path.join( data_folder , game_name)
+	data_folder 			= os.path.join(programm_folder, resource_folder_name)
+	game_data_folder 		= os.path.join( data_folder , game_name)
 	raw_game_data_folder 	= os.path.join( game_data_folder, 'raw_data')
 
 	if ( os.path.isdir( data_folder ) == False ):
