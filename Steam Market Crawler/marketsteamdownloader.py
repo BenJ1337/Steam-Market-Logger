@@ -74,7 +74,7 @@ def createList( game_data_folder, raw_game_data_folder, game_id, id ):
 
 		items = os.listdir( listfile_folder )
 
-		datei_out.write( "Name;Price;CPrice;Number;Type;Restriction,PicUrl\n" )
+		datei_out.write( "Name;Price;CPrice;Number;Type;Restriction;PicUrl\n" )
 		for item in items:
 			items_data = os.path.join(listfile_folder, item)
 
@@ -91,7 +91,9 @@ def createList( game_data_folder, raw_game_data_folder, game_id, id ):
 def outputCSV( items ):
 	ausgabe = ""
 	for entry in items:
-		ausgabe += entry['name'] + ";" + entry['sell_price_text'] + ";" + str(entry['sale_price_text']) + ";" + str(entry['sell_listings']) + "\n"
+		ausgabe += entry['name'] + ";" + entry['sell_price_text'] + ";" + str(entry['sale_price_text']) + ";" + str(entry['sell_listings']) \
+					+ ";" + str(entry['asset_description']['type']) + ";" + str(entry['asset_description']['market_tradable_restriction']) \
+					 + ";" + "https://steamcommunity-a.akamaihd.net/economy/image/" + str(entry['asset_description']['icon_url_large']) + "\n"
 
 	return ausgabe
 
@@ -146,10 +148,13 @@ if __name__ == "__main__":
 
 	folder_id = createRawDataFolder( raw_game_data_folder )	
 
+	folder_id = 1
+
 	startzeitpunkt = time.localtime()
 	print( "starttime: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n" )
 
-	downloadMarketResources( raw_game_data_folder, folder_id, game_id, number_of_items_in_one_json, start_item )
+	#downloadMarketResources( raw_game_data_folder, folder_id, game_id, number_of_items_in_one_json, start_item )
+
 
 	endzeitpunkt = time.localtime()
 	diffenenz = time.mktime( endzeitpunkt ) - time.mktime( startzeitpunkt )
