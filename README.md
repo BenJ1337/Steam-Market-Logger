@@ -1,4 +1,4 @@
-# Steam Market Crawler
+# Steam Market Logger
 
 Multi Platform: Windows, Linux
 Language: python3
